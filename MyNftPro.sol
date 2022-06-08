@@ -1,8 +1,5 @@
-  
+
 // SPDX-License-Identifier: MIT
-
- 
-
 pragma solidity >=0.8.4;
 
 import "@openzeppelin/contracts/token/ERC721/extensions/ERC721Enumerable.sol";
@@ -35,15 +32,16 @@ contract NFT is ERC721Enumerable, Ownable {
 
   // public
   function mint(address _to, uint256 _mintAmount) public payable {
+    require(_to != address(0), "Cannot mint to this address");
     uint256 supply = totalSupply();
     require(!paused);
     require(_mintAmount > 0);
     require(_mintAmount <= maxMintAmount);
-    require(supply + _mintAmount <= maxSupply);
+    require((supply + _mintAmount) <= maxSupply);
 
     if (msg.sender != owner()) {
         if(whitelisted[msg.sender] != true) {
-          require(msg.value >= cost * _mintAmount);
+          require(msg.value >= (cost * _mintAmount));
         }
     }
 
@@ -93,29 +91,31 @@ contract NFT is ERC721Enumerable, Ownable {
   }
 
   function setBaseURI(string memory _newBaseURI) public onlyOwner {
+    require(bytes(_newBaseURI).length >  0, "enter a valid base url");
     baseURI = _newBaseURI;
   }
 
   function setBaseExtension(string memory _newBaseExtension) public onlyOwner {
+    require(bytes(_newBaseExtension).length >  0, "enter a valid base extension");
     baseExtension = _newBaseExtension;
   }
 
   function pause(bool _state) public onlyOwner {
     paused = _state;
   }
- 
+
  function whitelistUser(address _user) public onlyOwner {
     whitelisted[_user] = true;
   }
- 
+
   function removeWhitelistUser(address _user) public onlyOwner {
     whitelisted[_user] = false;
   }
 
   function withdraw() public payable onlyOwner {
-    
+
     (bool os, ) = payable(owner()).call{value: address(this).balance}("");
-    require(os);
-    
+    require(os, "withdrawal failed");
+
   }
 }
