@@ -1,7 +1,4 @@
-  
 // SPDX-License-Identifier: MIT
-
- 
 
 pragma solidity >=0.8.4;
 
@@ -36,14 +33,15 @@ contract NFT is ERC721Enumerable, Ownable {
   // public
   function mint(address _to, uint256 _mintAmount) public payable {
     uint256 supply = totalSupply();
-    require(!paused);
-    require(_mintAmount > 0);
-    require(_mintAmount <= maxMintAmount);
-    require(supply + _mintAmount <= maxSupply);
+    require(!paused, "Minting has been paused");
+    require(_to != address(0), "Enter a valid address to mint");
+    require(_mintAmount > 0, "Enter a valid mint amount");
+    require(_mintAmount <= maxMintAmount, "Mint amount has to be lower than max mint amount");
+    require(supply + _mintAmount <= maxSupply, "Adding mint amount to supply shoudn't exceed max supply" );
 
     if (msg.sender != owner()) {
         if(whitelisted[msg.sender] != true) {
-          require(msg.value >= cost * _mintAmount);
+          require(msg.value >= cost * _mintAmount, "You need to pay to mint if you are not whitelisted or the owner");
         }
     }
 
@@ -93,10 +91,12 @@ contract NFT is ERC721Enumerable, Ownable {
   }
 
   function setBaseURI(string memory _newBaseURI) public onlyOwner {
+    require(bytes(_newBaseURI).length > 7, "Enter a valid base uri"); // if you are using ipfs, uri starts with ipfs://
     baseURI = _newBaseURI;
   }
 
   function setBaseExtension(string memory _newBaseExtension) public onlyOwner {
+    require(bytes(_newBaseExtension).length >= 2, "Enter a valid base extension");
     baseExtension = _newBaseExtension;
   }
 
@@ -115,7 +115,7 @@ contract NFT is ERC721Enumerable, Ownable {
   function withdraw() public payable onlyOwner {
     
     (bool os, ) = payable(owner()).call{value: address(this).balance}("");
-    require(os);
+    require(os, "Withdrawal failed");
     
   }
 }
